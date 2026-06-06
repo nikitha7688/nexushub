@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  ChevronRight,
   File as FileIcon,
   FileSpreadsheet,
   FileText,
@@ -10,9 +11,9 @@ import {
   LayoutGrid,
   List,
   Plus,
-  Upload,
   Video,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,7 +25,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FILES, findPerson, formatBytes, type FileItem } from "@/lib/mock-data";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FilePreviewDialog } from "@/components/files/file-preview-dialog";
+import { UploadDialog } from "@/components/files/upload-dialog";
+import {
+  FILES,
+  buildFolderPath,
+  findPerson,
+  formatBytes,
+  type FileItem,
+} from "@/lib/mock-data";
 import { initials, cn } from "@/lib/utils";
 
 type View = "grid" | "list";
@@ -40,73 +50,133 @@ const ICONS = {
 
 export default function FilesPage() {
   const [view, setView] = React.useState<View>("grid");
+  const [folderId, setFolderId] = React.useState<string | null>(null);
+  const [previewing, setPreviewing] = React.useState<FileItem | null>(null);
+
+  const items = FILES.filter((f) => f.parentId === folderId);
+  const path = buildFolderPath(FILES, folderId);
+
+  function openItem(item: FileItem) {
+    if (item.kind === "folder") {
+      setFolderId(item.id);
+    } else {
+      setPreviewing(item);
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <nav className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>Files</span>
-            <span>/</span>
-            <span className="text-foreground">All</span>
-          </nav>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">All files</h1>
-          <p className="text-sm text-muted-foreground">{FILES.length} items</p>
+          <Breadcrumbs path={path} onNavigate={setFolderId} />
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            {path.length === 0 ? "All files" : path[path.length - 1].name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {items.length} item{items.length === 1 ? "" : "s"}
+          </p>
         </div>
         <div className="flex gap-2">
-          <div className="inline-flex rounded-md border p-0.5">
-            <button
-              onClick={() => setView("grid")}
-              className={cn(
-                "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium",
-                view === "grid" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-              aria-label="Grid view"
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Grid
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={cn(
-                "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium",
-                view === "list" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-              aria-label="List view"
-            >
-              <List className="h-3.5 w-3.5" />
-              List
-            </button>
-          </div>
-          <Button variant="outline">
+          <ViewToggle view={view} onChange={setView} />
+          <Button
+            variant="outline"
+            onClick={() => toast.success("New folder created (mock)")}
+          >
             <Plus className="h-4 w-4" />
             New folder
           </Button>
-          <Button>
-            <Upload className="h-4 w-4" />
-            Upload
-          </Button>
+          <UploadDialog />
         </div>
       </div>
 
-      {view === "grid" ? <Grid items={FILES} /> : <FileList items={FILES} />}
+      {items.length === 0 ? (
+        <EmptyState
+          icon={<Folder className="h-5 w-5" />}
+          title="This folder is empty"
+          description="Drag files into this folder or use Upload to add some."
+        />
+      ) : view === "grid" ? (
+        <Grid items={items} onOpen={openItem} />
+      ) : (
+        <FileList items={items} onOpen={openItem} />
+      )}
 
-      <div className="rounded-lg border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-        <Upload className="mx-auto mb-2 h-5 w-5" />
-        Drop files here to upload (UI only — wired in Phase 3).
-      </div>
+      <FilePreviewDialog file={previewing} onClose={() => setPreviewing(null)} />
     </div>
   );
 }
 
-function Grid({ items }: { items: FileItem[] }) {
+function Breadcrumbs({
+  path,
+  onNavigate,
+}: {
+  path: FileItem[];
+  onNavigate: (id: string | null) => void;
+}) {
+  return (
+    <nav className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+      <button
+        onClick={() => onNavigate(null)}
+        className="hover:text-foreground"
+      >
+        Files
+      </button>
+      {path.map((p, i) => (
+        <React.Fragment key={p.id}>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <button
+            onClick={() => onNavigate(p.id)}
+            className={cn(i === path.length - 1 ? "text-foreground" : "hover:text-foreground")}
+          >
+            {p.name}
+          </button>
+        </React.Fragment>
+      ))}
+    </nav>
+  );
+}
+
+function ViewToggle({ view, onChange }: { view: View; onChange: (v: View) => void }) {
+  return (
+    <div className="inline-flex rounded-md border p-0.5">
+      <button
+        onClick={() => onChange("grid")}
+        className={cn(
+          "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium",
+          view === "grid" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+        aria-label="Grid view"
+      >
+        <LayoutGrid className="h-3.5 w-3.5" />
+        Grid
+      </button>
+      <button
+        onClick={() => onChange("list")}
+        className={cn(
+          "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium",
+          view === "list" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+        aria-label="List view"
+      >
+        <List className="h-3.5 w-3.5" />
+        List
+      </button>
+    </div>
+  );
+}
+
+function Grid({ items, onOpen }: { items: FileItem[]; onOpen: (f: FileItem) => void }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {items.map((f) => {
         const Icon = ICONS[f.kind] ?? FileIcon;
         const owner = findPerson(f.ownerId);
         return (
-          <Card key={f.id} className="cursor-pointer p-4 text-center transition-shadow hover:shadow-elevated">
+          <button
+            key={f.id}
+            onClick={() => onOpen(f)}
+            className="rounded-xl border bg-card p-4 text-center transition-shadow hover:shadow-elevated"
+          >
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Icon className="h-6 w-6" />
             </div>
@@ -117,14 +187,14 @@ function Grid({ items }: { items: FileItem[] }) {
               {f.kind === "folder" ? "Folder" : formatBytes(f.size)}
             </p>
             <p className="mt-2 truncate text-[11px] text-muted-foreground">{owner?.name}</p>
-          </Card>
+          </button>
         );
       })}
     </div>
   );
 }
 
-function FileList({ items }: { items: FileItem[] }) {
+function FileList({ items, onOpen }: { items: FileItem[]; onOpen: (f: FileItem) => void }) {
   return (
     <Card>
       <Table>
@@ -141,7 +211,11 @@ function FileList({ items }: { items: FileItem[] }) {
             const Icon = ICONS[f.kind] ?? FileIcon;
             const owner = findPerson(f.ownerId);
             return (
-              <TableRow key={f.id}>
+              <TableRow
+                key={f.id}
+                onClick={() => onOpen(f)}
+                className="cursor-pointer"
+              >
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">

@@ -102,31 +102,31 @@
 
 ### 8. Task Module
 
-- [ ] Kanban Board (drag-and-drop UI)
-- [ ] Calendar View
-- [ ] Task Details modal/page
-- [ ] Filters (priority, assignee, due date)
+- [x] Kanban Board (drag-and-drop UI)
+- [x] Calendar View
+- [x] Task Details modal/page
+- [x] Filters (priority, assignee, due date)
 
 ### 9. Documentation Module
 
-- [ ] Rich Text Editor (with markdown + code blocks)
-- [ ] Templates
-- [ ] Version history UI
-- [ ] Search
-- [ ] Categories sidebar
+- [x] Rich Text Editor (with markdown + code blocks)
+- [x] Templates
+- [x] Version history UI
+- [x] Search
+- [x] Categories sidebar
 
 ### 10. Notes Module
 
-- [ ] Personal / Team / Meeting notes tabs
-- [ ] Auto-save indicator
-- [ ] Pin notes
+- [x] Personal / Team / Meeting notes tabs
+- [x] Auto-save indicator
+- [x] Pin notes
 
 ### 11. File Manager Module
 
-- [ ] Grid + list view
-- [ ] Folder navigation
-- [ ] Preview (image / PDF / video)
-- [ ] Upload UI
+- [x] Grid + list view
+- [x] Folder navigation
+- [x] Preview (image / PDF / video)
+- [x] Upload UI
 
 ### 12. Team Collaboration Module
 

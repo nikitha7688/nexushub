@@ -90,18 +90,45 @@ export interface FileItem {
   size: number; // bytes
   updatedAt: string;
   ownerId: string;
+  parentId: string | null;
 }
 
 export const FILES: FileItem[] = [
-  { id: "f1", name: "Brand guidelines", kind: "folder", size: 0, updatedAt: "2026-06-03", ownerId: "u6" },
-  { id: "f2", name: "Q3 roadmap", kind: "folder", size: 0, updatedAt: "2026-05-25", ownerId: "u3" },
-  { id: "f3", name: "hero-illustration.png", kind: "image", size: 4_200_000, updatedAt: "2026-06-01", ownerId: "u6" },
-  { id: "f4", name: "investor-deck-v3.pdf", kind: "pdf", size: 12_500_000, updatedAt: "2026-05-28", ownerId: "u3" },
-  { id: "f5", name: "product-tour.mp4", kind: "video", size: 88_300_000, updatedAt: "2026-05-19", ownerId: "u7" },
-  { id: "f6", name: "Q2-financials.xlsx", kind: "sheet", size: 220_000, updatedAt: "2026-05-12", ownerId: "u4" },
-  { id: "f7", name: "incident-2026-05-18.md", kind: "doc", size: 18_000, updatedAt: "2026-05-20", ownerId: "u4" },
-  { id: "f8", name: "logo-mark.svg", kind: "image", size: 14_000, updatedAt: "2026-04-15", ownerId: "u6" },
+  // Root
+  { id: "f1", name: "Brand guidelines", kind: "folder", size: 0, updatedAt: "2026-06-03", ownerId: "u6", parentId: null },
+  { id: "f2", name: "Q3 roadmap", kind: "folder", size: 0, updatedAt: "2026-05-25", ownerId: "u3", parentId: null },
+  { id: "f3", name: "hero-illustration.png", kind: "image", size: 4_200_000, updatedAt: "2026-06-01", ownerId: "u6", parentId: null },
+  { id: "f4", name: "investor-deck-v3.pdf", kind: "pdf", size: 12_500_000, updatedAt: "2026-05-28", ownerId: "u3", parentId: null },
+  { id: "f5", name: "product-tour.mp4", kind: "video", size: 88_300_000, updatedAt: "2026-05-19", ownerId: "u7", parentId: null },
+  { id: "f6", name: "Q2-financials.xlsx", kind: "sheet", size: 220_000, updatedAt: "2026-05-12", ownerId: "u4", parentId: null },
+  { id: "f7", name: "incident-2026-05-18.md", kind: "doc", size: 18_000, updatedAt: "2026-05-20", ownerId: "u4", parentId: null },
+  { id: "f8", name: "logo-mark.svg", kind: "image", size: 14_000, updatedAt: "2026-04-15", ownerId: "u6", parentId: null },
+
+  // Inside "Brand guidelines" (f1)
+  { id: "f1_1", name: "colors.png", kind: "image", size: 380_000, updatedAt: "2026-06-03", ownerId: "u6", parentId: "f1" },
+  { id: "f1_2", name: "typography.png", kind: "image", size: 420_000, updatedAt: "2026-06-03", ownerId: "u6", parentId: "f1" },
+  { id: "f1_3", name: "logo-usage.pdf", kind: "pdf", size: 1_900_000, updatedAt: "2026-05-12", ownerId: "u6", parentId: "f1" },
+  { id: "f1_4", name: "voice-and-tone.md", kind: "doc", size: 22_000, updatedAt: "2026-04-29", ownerId: "u6", parentId: "f1" },
+
+  // Inside "Q3 roadmap" (f2)
+  { id: "f2_1", name: "roadmap-final.pdf", kind: "pdf", size: 3_400_000, updatedAt: "2026-05-25", ownerId: "u3", parentId: "f2" },
+  { id: "f2_2", name: "okr-tracker.xlsx", kind: "sheet", size: 96_000, updatedAt: "2026-05-25", ownerId: "u3", parentId: "f2" },
+  { id: "f2_3", name: "Themes", kind: "folder", size: 0, updatedAt: "2026-05-24", ownerId: "u3", parentId: "f2" },
+
+  // Inside "Themes" (f2_3)
+  { id: "f2_3_1", name: "activation.md", kind: "doc", size: 14_000, updatedAt: "2026-05-23", ownerId: "u3", parentId: "f2_3" },
+  { id: "f2_3_2", name: "stickiness.md", kind: "doc", size: 11_000, updatedAt: "2026-05-23", ownerId: "u3", parentId: "f2_3" },
 ];
+
+export function buildFolderPath(files: FileItem[], id: string | null): FileItem[] {
+  const path: FileItem[] = [];
+  let current = files.find((f) => f.id === id);
+  while (current) {
+    path.unshift(current);
+    current = current.parentId ? files.find((f) => f.id === current!.parentId) : undefined;
+  }
+  return path;
+}
 
 export interface NotificationItem {
   id: string;
@@ -136,6 +163,214 @@ export function formatBytes(bytes: number) {
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
 }
+
+// --- Documents: bodies, versions, templates ---
+
+export const DOC_BODIES: Record<string, string> = {
+  d1: `# Q3 Roadmap
+
+> Locked at the planning offsite on May 22, 2026. Owner: **Sara Akhtar**.
+
+We are committing to three top-line themes for Q3:
+
+1. **Activation** — get a new workspace to first ten docs / first kanban move in under 10 minutes.
+2. **Stickiness** — push WAU/MAU from 0.41 → 0.55 by shipping the new notifications center.
+3. **Expansion** — land the Pro upsell path inside the product, not just on the landing page.
+
+## Cut list
+
+- Slack-style threads (push to Q4)
+- Public docs (deprecated)
+
+## Bets we're making
+
+- The new editor will move docs-created/week by **+30%**.
+- The redesigned tasks board will move tasks-closed/week by **+15%**.
+
+## Risks
+
+- Two engineers on parental leave from late July through August.
+- Cloudflare R2 latency in apac-east is a tail risk for files.
+
+\`\`\`ts
+const goal = "Ship activation work by August 15.";
+\`\`\``,
+  d2: `# Auth service runbook
+
+On-call runbook for the **auth-service** in production. Last reviewed by Marcus on 2026-05-31.
+
+## When you get paged
+
+1. Open the dashboard at \`grafana.internal/d/auth-latency\`.
+2. Check the latest deploy in \`#deploys-auth\`.
+3. If error rate > 2%, roll back via \`kubectl rollout undo deploy/auth-service\`.
+
+## Common incidents
+
+- **Token signing 5xx** — almost always a stale JWKS cache. Restart pods.
+- **OAuth callback 4xx spike** — usually a provider outage. Check status pages first.
+
+> Don't restart the whole cluster. The auth service is the bootstrap dependency for every other service — a full restart can wedge things for 10+ minutes.`,
+  d3: `# Design tokens v2
+
+Migration plan from **v1** → **v2** for our color, typography, and spacing tokens.
+
+## What's changing
+
+- Colors move from \`hex\` to \`hsl\` for easier opacity math.
+- Typography adopts a 1.125 ratio between sizes.
+- Spacing scale renamed: \`page\`, \`section\`, \`card\`.
+
+## Migration steps
+
+1. Pull the latest \`design-tokens@2.0.0\` package.
+2. Run the codemod: \`npx nexus codemod tokens-v2\`.
+3. Review the diff — pay attention to brand and CTA usages.
+
+\`\`\`json
+{
+  "primary": "243 75% 59%",
+  "radius": "0.625rem"
+}
+\`\`\``,
+};
+
+export interface DocVersion {
+  id: string;
+  authorId: string;
+  createdAt: string;
+  summary: string;
+}
+
+export const DOC_VERSIONS: Record<string, DocVersion[]> = {
+  d1: [
+    { id: "v3", authorId: "u3", createdAt: "2026-05-22T15:22:00Z", summary: "Locked Q3 themes & cut list" },
+    { id: "v2", authorId: "u3", createdAt: "2026-05-21T09:11:00Z", summary: "Added risks section" },
+    { id: "v1", authorId: "u3", createdAt: "2026-05-20T17:43:00Z", summary: "Initial draft" },
+  ],
+  d2: [
+    { id: "v4", authorId: "u2", createdAt: "2026-05-31T11:05:00Z", summary: "Reviewed; added JWKS note" },
+    { id: "v3", authorId: "u5", createdAt: "2026-05-18T08:30:00Z", summary: "OAuth callback section" },
+    { id: "v2", authorId: "u2", createdAt: "2026-04-02T13:12:00Z", summary: "Rollback steps" },
+    { id: "v1", authorId: "u2", createdAt: "2026-03-14T10:00:00Z", summary: "Initial runbook" },
+  ],
+  d3: [
+    { id: "v2", authorId: "u6", createdAt: "2026-06-02T14:20:00Z", summary: "Added codemod instructions" },
+    { id: "v1", authorId: "u6", createdAt: "2026-05-30T12:00:00Z", summary: "Initial draft" },
+  ],
+};
+
+export interface DocTemplate {
+  id: string;
+  title: string;
+  description: string;
+  body: string;
+}
+
+export const DOC_TEMPLATES: DocTemplate[] = [
+  {
+    id: "blank",
+    title: "Blank document",
+    description: "Start from scratch.",
+    body: "# Untitled\n\nStart writing…",
+  },
+  {
+    id: "meeting",
+    title: "Meeting notes",
+    description: "Attendees, agenda, decisions, action items.",
+    body: `# Meeting notes — {{date}}
+
+**Attendees:**
+
+## Agenda
+
+1. …
+2. …
+
+## Decisions
+
+- …
+
+## Action items
+
+- [ ] Owner — task — due
+`,
+  },
+  {
+    id: "prd",
+    title: "Product requirements (PRD)",
+    description: "Problem, goals, scope, success metrics.",
+    body: `# PRD — Feature name
+
+## Problem
+
+Why this matters and who it's for.
+
+## Goals & non-goals
+
+- Goal 1
+- Non-goal: …
+
+## Solution
+
+Describe the proposed solution at a high level.
+
+## Success metrics
+
+- Metric 1: target →
+- Metric 2: target →
+
+## Rollout
+
+\`\`\`
+phase 1: …
+phase 2: …
+\`\`\`
+`,
+  },
+  {
+    id: "runbook",
+    title: "On-call runbook",
+    description: "Paging, common incidents, rollback steps.",
+    body: `# Service runbook
+
+## When you get paged
+
+1. Open the dashboard.
+2. Check the latest deploy.
+3. If error rate > 2%, roll back.
+
+## Common incidents
+
+- **Incident A** — …
+- **Incident B** — …
+`,
+  },
+  {
+    id: "retro",
+    title: "Incident retrospective",
+    description: "Timeline, root cause, action items.",
+    body: `# Incident retro — YYYY-MM-DD
+
+## Summary
+
+What happened, blast radius, duration.
+
+## Timeline
+
+- HH:MM — …
+- HH:MM — …
+
+## Root cause
+
+…
+
+## Action items
+
+- [ ] Owner — fix — due
+`,
+  },
+];
 
 export function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();

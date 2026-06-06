@@ -1,16 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { FileText, Filter, Plus, Search } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { FileText, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TemplatesDialog } from "@/components/documents/templates-dialog";
 import { DOC_CATEGORIES, DOCUMENTS, findPerson } from "@/lib/mock-data";
 import { initials, cn } from "@/lib/utils";
 
 export default function DocumentsPage() {
+  const router = useRouter();
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState<string | null>(null);
 
@@ -47,10 +52,12 @@ export default function DocumentsPage() {
               {category ? ` in ${category}` : ""}
             </p>
           </div>
-          <Button>
-            <Plus className="h-4 w-4" />
-            New document
-          </Button>
+          <TemplatesDialog
+            onPick={(t) => {
+              toast.success(`Started doc from "${t.title}"`);
+              router.push(`/documents/${DOCUMENTS[0].id}`);
+            }}
+          />
         </div>
 
         <div className="flex gap-2">
@@ -73,27 +80,29 @@ export default function DocumentsPage() {
           {filtered.map((d) => {
             const author = findPerson(d.authorId);
             return (
-              <Card key={d.id} className="cursor-pointer p-card transition-shadow hover:shadow-elevated">
-                <div className="mb-3 flex items-start justify-between">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <FileText className="h-4 w-4" />
+              <Link key={d.id} href={`/documents/${d.id}`}>
+                <Card className="cursor-pointer p-card transition-shadow hover:shadow-elevated">
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <Badge variant="outline">{d.category}</Badge>
                   </div>
-                  <Badge variant="outline">{d.category}</Badge>
-                </div>
-                <h3 className="text-base font-semibold">{d.title}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.excerpt}</p>
-                <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-[10px]">
-                        {author ? initials(author.name) : ""}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{author?.name}</span>
+                  <h3 className="text-base font-semibold">{d.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.excerpt}</p>
+                  <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-[10px]">
+                          {author ? initials(author.name) : ""}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{author?.name}</span>
+                    </div>
+                    <span>{d.updatedAt}</span>
                   </div>
-                  <span>{d.updatedAt}</span>
-                </div>
-              </Card>
+                </Card>
+              </Link>
             );
           })}
         </div>
