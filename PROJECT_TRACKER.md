@@ -75,10 +75,10 @@
 
 ### 5. Onboarding Flow
 
-- [ ] Step 1 — Workspace Setup (name, team size, department)
-- [ ] Step 2 — Select Features (Docs/Notes/Tasks/Collab/Files)
-- [ ] Step 3 — Invite Team (Admin / Manager / Developer / Viewer)
-- [ ] Step 4 — Theme Selection (Light / Dark / System)
+- [x] Step 1 — Workspace Setup (name, team size, department)
+- [x] Step 2 — Select Features (Docs/Notes/Tasks/Collab/Files)
+- [x] Step 3 — Invite Team (Admin / Manager / Developer / Viewer)
+- [x] Step 4 — Theme Selection (Light / Dark / System)
 
 ### 6. Dashboard Shell
 
