@@ -18,9 +18,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { DocumentEditor } from "@/components/documents/document-editor";
 import { VersionHistory } from "@/components/documents/version-history";
+import { CommentsThread, type Comment } from "@/components/collab/comments-thread";
 import {
+  CURRENT_USER,
   DOCUMENTS,
   DOC_BODIES,
+  DOC_COMMENTS,
   DOC_VERSIONS,
   findPerson,
 } from "@/lib/mock-data";
@@ -36,6 +39,28 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
   const [title, setTitle] = React.useState(doc.title);
   const [body, setBody] = React.useState(DOC_BODIES[doc.id] ?? `# ${doc.title}\n\n${doc.excerpt}`);
   const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [comments, setComments] = React.useState<Comment[]>(
+    DOC_COMMENTS.filter((c) => c.docId === doc.id).map((c) => ({
+      id: c.id,
+      authorId: c.authorId,
+      body: c.body,
+      createdAt: c.createdAt,
+      parentId: c.parentId,
+    })),
+  );
+
+  function addComment(body: string, parentId?: string) {
+    setComments((prev) => [
+      ...prev,
+      {
+        id: `c_${Date.now()}`,
+        authorId: CURRENT_USER.id,
+        body,
+        createdAt: new Date().toISOString(),
+        parentId,
+      },
+    ]);
+  }
 
   return (
     <div className="space-y-4">
@@ -114,6 +139,10 @@ export default function DocumentDetailPage({ params }: { params: { id: string } 
           </aside>
         )}
       </div>
+
+      <Separator />
+
+      <CommentsThread comments={comments} onAdd={addComment} />
     </div>
   );
 }

@@ -164,6 +164,25 @@ export function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
 }
 
+// --- Document comments ---
+
+export interface DocComment {
+  id: string;
+  docId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  parentId?: string;
+}
+
+export const DOC_COMMENTS: DocComment[] = [
+  { id: "c1", docId: "d1", authorId: "u3", body: "Heads up @MarcusLee — activation work needs the new editor land first. Can you lock the dates?", createdAt: "2026-06-05T14:21:00Z" },
+  { id: "c2", docId: "d1", authorId: "u2", body: "@SaraAkhtar yes — editor ships by July 18 latest. I'll add it to the roadmap doc.", createdAt: "2026-06-05T15:02:00Z", parentId: "c1" },
+  { id: "c3", docId: "d1", authorId: "u4", body: "On risks — should we also call out the on-call coverage gap during parental leave?", createdAt: "2026-06-06T09:10:00Z" },
+  { id: "c4", docId: "d2", authorId: "u5", body: "Updated the JWKS section — @MarcusLee can you re-review when you get a minute?", createdAt: "2026-06-06T07:40:00Z" },
+  { id: "c5", docId: "d3", authorId: "u6", body: "Codemod is ready, but it doesn't handle the brand-on-brand cases. Will document the manual step.", createdAt: "2026-06-02T13:55:00Z" },
+];
+
 // --- Documents: bodies, versions, templates ---
 
 export const DOC_BODIES: Record<string, string> = {

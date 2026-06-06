@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, Menu, Plus, Search, Settings, User as UserIcon } from "lucide-react";
+import { LogOut, Menu, Plus, Search, Settings, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,15 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationsPopover } from "@/components/dashboard/notifications-popover";
 import { initials } from "@/lib/utils";
 
 interface TopbarProps {
   onOpenSidebar: () => void;
   user?: { name: string; email: string };
-  notificationCount?: number;
 }
 
-export function Topbar({ onOpenSidebar, user, notificationCount = 0 }: TopbarProps) {
+export function Topbar({ onOpenSidebar, user }: TopbarProps) {
   const router = useRouter();
   const u = user ?? { name: "Ada Lovelace", email: "ada@nexushub.io" };
 
@@ -60,20 +60,7 @@ export function Topbar({ onOpenSidebar, user, notificationCount = 0 }: TopbarPro
 
         <ThemeToggle />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild
-          className="relative"
-          aria-label="Notifications"
-        >
-          <Link href="/notifications">
-            <Bell className="h-4 w-4" />
-            {notificationCount > 0 && (
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-destructive" />
-            )}
-          </Link>
-        </Button>
+        <NotificationsPopover />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

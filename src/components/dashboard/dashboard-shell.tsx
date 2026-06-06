@@ -79,7 +79,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onOpenSidebar={() => setMobileOpen(true)} user={user} notificationCount={3} />
+        <Topbar onOpenSidebar={() => setMobileOpen(true)} user={user} />
         <main className="flex-1 px-page py-8">{children}</main>
       </div>
     </div>

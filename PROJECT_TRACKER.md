@@ -130,25 +130,25 @@
 
 ### 12. Team Collaboration Module
 
-- [ ] Members list
-- [ ] Mentions UI
-- [ ] Comments thread
-- [ ] Activity feed
+- [x] Members list
+- [x] Mentions UI
+- [x] Comments thread
+- [x] Activity feed
 
 ### 13. Notifications Module
 
-- [ ] Notifications center
-- [ ] Mark read / unread
-- [ ] Filter by type (mention / task / alert)
+- [x] Notifications center
+- [x] Mark read / unread
+- [x] Filter by type (mention / task / alert)
 
 ### 14. Account / Settings
 
-- [ ] Profile (Name, Email, Image, Department, Role)
-- [ ] Change password
-- [ ] Notification preferences
-- [ ] Theme settings
-- [ ] API tokens
-- [ ] Activity history
+- [x] Profile (Name, Email, Image, Department, Role)
+- [x] Change password
+- [x] Notification preferences
+- [x] Theme settings
+- [x] API tokens
+- [x] Activity history
 
 ---
 

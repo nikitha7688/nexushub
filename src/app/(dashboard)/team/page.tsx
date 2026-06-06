@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { AtSign, MoreHorizontal, Plus, Search } from "lucide-react";
+import { AtSign, MoreHorizontal, Plus, Search, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +16,49 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { NOTIFICATIONS, PEOPLE, findPerson, timeAgo } from "@/lib/mock-data";
+import { MentionInput, renderMentions } from "@/components/collab/mention-input";
+import { CURRENT_USER, NOTIFICATIONS, PEOPLE, findPerson, timeAgo } from "@/lib/mock-data";
 import { initials } from "@/lib/utils";
+
+interface Update {
+  id: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+}
 
 export default function TeamPage() {
   const [query, setQuery] = React.useState("");
+  const [draft, setDraft] = React.useState("");
+  const [updates, setUpdates] = React.useState<Update[]>([
+    {
+      id: "up1",
+      authorId: "u3",
+      body: "Q3 roadmap is locked — read it here: @AdaLovelace please share with the team.",
+      createdAt: "2026-06-05T18:00:00Z",
+    },
+    {
+      id: "up2",
+      authorId: "u2",
+      body: "Auth runbook updated. Highly recommend a re-read before on-call rotation @HanaSuzuki.",
+      createdAt: "2026-06-05T11:21:00Z",
+    },
+  ]);
+
+  function postUpdate() {
+    if (!draft.trim()) return;
+    setUpdates((prev) => [
+      {
+        id: `up_${Date.now()}`,
+        authorId: CURRENT_USER.id,
+        body: draft.trim(),
+        createdAt: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
+    setDraft("");
+    toast.success("Update posted");
+  }
 
   const filtered = PEOPLE.filter((p) =>
     [p.name, p.email, p.department, p.role].some((s) => s.toLowerCase().includes(query.toLowerCase())),
@@ -125,15 +164,50 @@ export default function TeamPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AtSign className="h-4 w-4" />
-            Mentions
+            Post an update
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Type{" "}
-            <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-xs">@name</kbd> in any
-            doc, note, or task to mention a teammate — they&apos;ll get a notification in real time.
-          </p>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <Avatar className="mt-0.5 h-8 w-8">
+              <AvatarFallback className="text-xs">{initials(CURRENT_USER.name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-2">
+              <MentionInput
+                value={draft}
+                onChange={setDraft}
+                placeholder="Share an update with the team… use @ to mention someone."
+              />
+              <div className="flex justify-end">
+                <Button size="sm" onClick={postUpdate} disabled={!draft.trim()}>
+                  <Send className="h-3.5 w-3.5" />
+                  Post update
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 border-t pt-4">
+            {updates.map((u) => {
+              const author = findPerson(u.authorId);
+              return (
+                <div key={u.id} className="flex items-start gap-3">
+                  <Avatar className="mt-0.5 h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {author ? initials(author.name) : "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{author?.name ?? "Unknown"}</p>
+                      <span className="text-xs text-muted-foreground">{timeAgo(u.createdAt)}</span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed">{renderMentions(u.body)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>
