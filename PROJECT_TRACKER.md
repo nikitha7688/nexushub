@@ -82,23 +82,23 @@
 
 ### 6. Dashboard Shell
 
-- [ ] App layout (sidebar + topbar + content area)
-- [ ] Sidebar nav with route highlighting
-- [ ] Topbar (search, notifications, profile menu)
-- [ ] Mobile responsive shell
+- [x] App layout (sidebar + topbar + content area)
+- [x] Sidebar nav with route highlighting
+- [x] Topbar (search, notifications, profile menu)
+- [x] Mobile responsive shell
 
 ### 7. Dashboard Pages
 
-- [ ] Dashboard Home (analytics overview)
-- [ ] Documents
-- [ ] Notes
-- [ ] Tasks
-- [ ] Files
-- [ ] Team
-- [ ] Notifications
-- [ ] Analytics
-- [ ] Profile
-- [ ] Settings
+- [x] Dashboard Home (analytics overview)
+- [x] Documents
+- [x] Notes
+- [x] Tasks
+- [x] Files
+- [x] Team
+- [x] Notifications
+- [x] Analytics
+- [x] Profile
+- [x] Settings
 
 ### 8. Task Module
 
