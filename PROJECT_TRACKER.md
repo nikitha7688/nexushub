@@ -155,10 +155,10 @@
 ## Phase 2 — Backend
 
 ### Stack
-- [ ] Node.js + Express scaffolding
-- [ ] MongoDB connection
-- [ ] Project structure (`routes/`, `controllers/`, `models/`, `middleware/`)
-- [ ] Env config + secrets
+- [x] Node.js + Express scaffolding
+- [x] MongoDB connection
+- [x] Project structure (`routes/`, `controllers/`, `models/`, `middleware/`)
+- [x] Env config + secrets
 
 ### API Implementation Order
 1. [ ] Authentication APIs (Signup, Login, OAuth, MFA, Forgot Password)
