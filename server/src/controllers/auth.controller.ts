@@ -1,8 +1,10 @@
 import type { RequestHandler } from "express";
+import { Types } from "mongoose";
 import { z } from "zod";
 import crypto from "node:crypto";
 import { HttpError } from "../middleware/error-handler.js";
 import { User, publicUser, type UserDoc } from "../models/user.model.js";
+// UserDoc used by helpers below.
 import { Workspace } from "../models/workspace.model.js";
 import { hashPassword, verifyPassword } from "../services/password.service.js";
 import { sendOtpEmail } from "../services/email.service.js";
@@ -102,17 +104,17 @@ export const postSignup: RequestHandler = async (req, res) => {
 
   const passwordHash = await hashPassword(password);
 
-  // Create workspace, then user that owns it
-  const workspace = await Workspace.create({ name: workspaceName, ownerId: null });
+  // Pre-allocate user id so we can satisfy Workspace.ownerId at creation time.
+  const userId = new Types.ObjectId();
+  const workspace = await Workspace.create({ name: workspaceName, ownerId: userId });
   const user = await User.create({
+    _id: userId,
     name,
     email,
     passwordHash,
     role: "Admin",
     workspaceId: workspace._id,
   });
-  workspace.ownerId = user._id;
-  await workspace.save();
 
   // Send email verification OTP
   const code = await issueOtp(String(user._id), "verify_email");
@@ -247,15 +249,20 @@ export const postResetPassword: RequestHandler = async (req, res) => {
 
 export const getMe: RequestHandler = async (req, res) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
-  const user = (await User.findById(req.auth.sub)) as UserDoc | null;
+  const user = await User.findById(req.auth.sub);
   if (!user) throw new HttpError(404, "User not found");
   res.json({ user: publicUser(user) });
 };
 
 // --- OAuth stubs (real provider wiring lands in the "Auth → OAuth" tracker item) ---
 
+const SUPPORTED_OAUTH = new Set(["google", "microsoft"]);
+
 export const oauthRedirect: RequestHandler = (req, _res, next) => {
-  const provider = req.params.provider;
+  const provider = (req.params.provider ?? "").toLowerCase();
+  if (!SUPPORTED_OAUTH.has(provider)) {
+    return next(new HttpError(400, `Unsupported OAuth provider: ${provider}`));
+  }
   next(
     new HttpError(
       501,
@@ -265,6 +272,9 @@ export const oauthRedirect: RequestHandler = (req, _res, next) => {
 };
 
 export const oauthCallback: RequestHandler = (req, _res, next) => {
-  const provider = req.params.provider;
+  const provider = (req.params.provider ?? "").toLowerCase();
+  if (!SUPPORTED_OAUTH.has(provider)) {
+    return next(new HttpError(400, `Unsupported OAuth provider: ${provider}`));
+  }
   next(new HttpError(501, `OAuth (${provider}) callback not implemented yet.`));
 };

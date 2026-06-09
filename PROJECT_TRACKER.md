@@ -161,7 +161,7 @@
 - [x] Env config + secrets
 
 ### API Implementation Order
-1. [ ] Authentication APIs (Signup, Login, OAuth, MFA, Forgot Password)
+1. [x] Authentication APIs (Signup, Login, OAuth, MFA, Forgot Password)
 2. [ ] User Management
 3. [ ] Workspace APIs
 4. [ ] Documents APIs
@@ -179,8 +179,8 @@
 - [ ] Analytics
 
 ### Auth
-- [ ] JWT issuance + refresh
-- [ ] OAuth (Google, Microsoft)
+- [x] JWT issuance + refresh
+- [ ] OAuth (Google, Microsoft) — endpoints stubbed (501) until provider apps + secrets are wired
 
 ---
 
