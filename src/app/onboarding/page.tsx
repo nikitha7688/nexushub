@@ -72,7 +72,7 @@ export default function OnboardingPage() {
 
   // Step 2
   const [selected, setSelected] = React.useState<Set<FeatureId>>(
-    new Set(["docs", "notes", "tasks", "collab", "files"]),
+    new Set<FeatureId>(["docs", "notes", "tasks", "collab", "files"]),
   );
 
   // Step 3

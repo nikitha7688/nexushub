@@ -41,7 +41,7 @@ export function HowItWorks() {
             From sign-up to shipping in six steps
           </h2>
           <p className="mt-4 text-base text-muted-foreground">
-            No 90-minute onboarding call. No "implementation partner." You'll be productive on day one.
+            No 90-minute onboarding call. No &ldquo;implementation partner.&rdquo; You&apos;ll be productive on day one.
           </p>
         </div>
 

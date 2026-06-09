@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Menu, Plus, Search, Settings, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
