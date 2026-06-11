@@ -162,7 +162,7 @@
 
 ### API Implementation Order
 1. [x] Authentication APIs (Signup, Login, OAuth, MFA, Forgot Password)
-2. [ ] User Management
+2. [x] User Management
 3. [ ] Workspace APIs
 4. [ ] Documents APIs
 5. [ ] Notes APIs
@@ -172,15 +172,18 @@
 9. [ ] Analytics APIs
 
 ### Cloudflare Integration
-- [ ] R2 Storage
-- [ ] Workers
-- [ ] CDN
-- [ ] Access
-- [ ] Analytics
+See **[INTEGRATIONS.md §2](./INTEGRATIONS.md#2-cloudflare)** for setup steps and code-change list.
+- [ ] R2 Storage — do this with API item #7 (File Upload APIs)
+- [ ] Workers — later, after the app is behind Cloudflare DNS
+- [ ] CDN — automatic once DNS is proxied through Cloudflare
+- [ ] Access — only if a private staging env is needed
+- [ ] Analytics — drop-in snippet (Web Analytics) or Workers Analytics Engine
 
 ### Auth
-- [x] JWT issuance + refresh
-- [x] OAuth (Google, Microsoft) — authorization-code flow wired; needs provider apps + secrets in env to go live
+See **[INTEGRATIONS.md §1](./INTEGRATIONS.md#1-firebase-authentication)** for the Firebase migration plan.
+- [x] JWT issuance + refresh *(in-house — replaced when Firebase lands)*
+- [x] OAuth (Google, Microsoft) — authorization-code flow wired *(in-house — replaced when Firebase lands)*
+- [ ] Firebase Authentication (Google + Microsoft + email/password) — replaces in-house auth; doc'd in INTEGRATIONS.md
 
 ---
 
