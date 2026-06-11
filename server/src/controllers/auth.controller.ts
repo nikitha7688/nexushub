@@ -9,6 +9,18 @@ import { Workspace } from "../models/workspace.model.js";
 import { hashPassword, verifyPassword } from "../services/password.service.js";
 import { sendOtpEmail } from "../services/email.service.js";
 import { issueOtp, verifyOtp } from "../services/otp.service.js";
+import {
+  buildRedirectUri,
+  exchangeCodeForAccessToken,
+  fetchUserInfo,
+  getProviderConfig,
+  isSupportedProvider,
+  signState,
+  verifyState,
+  type OAuthProvider,
+  type ProviderUserInfo,
+} from "../services/oauth.service.js";
+import { env } from "../config/env.js";
 // issueOtp is used by signup/login/forgot flows; verifyOtp by verify/mfa/reset.
 import {
   issueRefreshToken,
@@ -147,6 +159,8 @@ export const postLogin: RequestHandler = async (req, res) => {
 
   const user = await User.findOne({ email }).select("+passwordHash");
   if (!user) throw new HttpError(401, "Invalid email or password");
+  // OAuth-only accounts have no local password — same error to avoid leaking that fact.
+  if (!user.passwordHash) throw new HttpError(401, "Invalid email or password");
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) throw new HttpError(401, "Invalid email or password");
 
@@ -254,27 +268,99 @@ export const getMe: RequestHandler = async (req, res) => {
   res.json({ user: publicUser(user) });
 };
 
-// --- OAuth stubs (real provider wiring lands in the "Auth → OAuth" tracker item) ---
+// --- OAuth ---
 
-const SUPPORTED_OAUTH = new Set(["google", "microsoft"]);
-
-export const oauthRedirect: RequestHandler = (req, _res, next) => {
-  const provider = (req.params.provider ?? "").toLowerCase();
-  if (!SUPPORTED_OAUTH.has(provider)) {
-    return next(new HttpError(400, `Unsupported OAuth provider: ${provider}`));
+function parseProvider(raw: string | undefined): OAuthProvider {
+  const provider = (raw ?? "").toLowerCase();
+  if (!isSupportedProvider(provider)) {
+    throw new HttpError(400, `Unsupported OAuth provider: ${provider}`);
   }
-  next(
-    new HttpError(
-      501,
-      `OAuth (${provider}) is not configured yet. Set ${provider.toUpperCase()}_CLIENT_ID and ${provider.toUpperCase()}_CLIENT_SECRET, then wire the redirect to the provider's consent URL.`,
-    ),
-  );
+  return provider;
+}
+
+async function findOrCreateOAuthUser(
+  provider: OAuthProvider,
+  info: ProviderUserInfo,
+): Promise<UserDoc> {
+  // 1) Existing link by (provider, providerUserId).
+  const linked = await User.findOne({
+    oauthProviders: { $elemMatch: { provider, providerUserId: info.providerUserId } },
+  });
+  if (linked) return linked;
+
+  // 2) Existing user by email — link this provider to it.
+  const byEmail = await User.findOne({ email: info.email });
+  if (byEmail) {
+    byEmail.oauthProviders.push({ provider, providerUserId: info.providerUserId });
+    if (info.emailVerified && !byEmail.emailVerified) byEmail.emailVerified = true;
+    if (!byEmail.avatarUrl && info.avatarUrl) byEmail.avatarUrl = info.avatarUrl;
+    await byEmail.save();
+    return byEmail;
+  }
+
+  // 3) Brand-new user — provision a workspace and make them Admin (matches local signup).
+  const userId = new Types.ObjectId();
+  const workspace = await Workspace.create({
+    name: `${info.name}'s workspace`,
+    ownerId: userId,
+  });
+  const user = await User.create({
+    _id: userId,
+    name: info.name,
+    email: info.email,
+    role: "Admin",
+    workspaceId: workspace._id,
+    emailVerified: info.emailVerified,
+    avatarUrl: info.avatarUrl,
+    oauthProviders: [{ provider, providerUserId: info.providerUserId }],
+  });
+  return user;
+}
+
+export const oauthRedirect: RequestHandler = (req, res) => {
+  const provider = parseProvider(req.params.provider);
+  const cfg = getProviderConfig(provider);
+
+  const params = new URLSearchParams({
+    client_id: cfg.clientId,
+    redirect_uri: buildRedirectUri(provider),
+    response_type: "code",
+    scope: cfg.scope,
+    state: signState(),
+    access_type: "offline",
+    prompt: "select_account",
+  });
+  res.redirect(`${cfg.authorizeUrl}?${params.toString()}`);
 };
 
-export const oauthCallback: RequestHandler = (req, _res, next) => {
-  const provider = (req.params.provider ?? "").toLowerCase();
-  if (!SUPPORTED_OAUTH.has(provider)) {
-    return next(new HttpError(400, `Unsupported OAuth provider: ${provider}`));
+export const oauthCallback: RequestHandler = async (req, res) => {
+  const provider = parseProvider(req.params.provider);
+
+  // Provider may bounce back with `?error=access_denied&error_description=...`
+  const providerError = typeof req.query.error === "string" ? req.query.error : null;
+  if (providerError) {
+    const desc = typeof req.query.error_description === "string" ? req.query.error_description : "";
+    throw new HttpError(400, `OAuth provider error: ${providerError}${desc ? ` — ${desc}` : ""}`);
   }
-  next(new HttpError(501, `OAuth (${provider}) callback not implemented yet.`));
+
+  const code = typeof req.query.code === "string" ? req.query.code : "";
+  const state = typeof req.query.state === "string" ? req.query.state : "";
+  if (!code) throw new HttpError(400, "Missing authorization code");
+  if (!verifyState(state)) throw new HttpError(400, "Invalid or expired OAuth state");
+
+  const providerAccessToken = await exchangeCodeForAccessToken(provider, code);
+  const info = await fetchUserInfo(provider, providerAccessToken);
+
+  const user = await findOrCreateOAuthUser(provider, info);
+  const tokens = await issueTokenPair(user, req);
+
+  // Hand tokens to the frontend via URL fragment so they're never logged or sent to the server.
+  const target = new URL(env.OAUTH_SUCCESS_REDIRECT);
+  const hashParams = new URLSearchParams({
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    provider,
+  });
+  target.hash = hashParams.toString();
+  res.redirect(target.toString());
 };

@@ -41,6 +41,6 @@ authRouter.post("/reset-password", validateBody(resetPasswordSchema), asyncHandl
 
 authRouter.get("/me", requireAuth, asyncHandler(getMe));
 
-// OAuth — stubs until provider apps + secrets are wired.
-authRouter.get("/oauth/:provider", oauthRedirect);
-authRouter.get("/oauth/:provider/callback", oauthCallback);
+// OAuth — Google + Microsoft authorization-code flow. Requires provider secrets in env.
+authRouter.get("/oauth/:provider", asyncHandler(oauthRedirect));
+authRouter.get("/oauth/:provider/callback", asyncHandler(oauthCallback));

@@ -180,7 +180,7 @@
 
 ### Auth
 - [x] JWT issuance + refresh
-- [ ] OAuth (Google, Microsoft) — endpoints stubbed (501) until provider apps + secrets are wired
+- [x] OAuth (Google, Microsoft) — authorization-code flow wired; needs provider apps + secrets in env to go live
 
 ---
 

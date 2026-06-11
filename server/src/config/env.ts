@@ -17,6 +17,14 @@ const schema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   MICROSOFT_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
+  // Tenant for Microsoft — "common" (any account), "organizations", "consumers", or a tenant GUID.
+  MICROSOFT_TENANT: z.string().default("common"),
+  // Public base URL of THIS API (used to build OAuth redirect URIs registered with providers).
+  PUBLIC_API_URL: z.string().default("http://localhost:4000"),
+  // Frontend URL the user is sent back to after a successful OAuth login.
+  OAUTH_SUCCESS_REDIRECT: z.string().default("http://localhost:5174/auth/oauth/callback"),
+  // HMAC secret for signing the OAuth `state` parameter (CSRF protection).
+  OAUTH_STATE_SECRET: z.string().min(16).default("dev-only-oauth-state-secret-please-replace"),
 
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
