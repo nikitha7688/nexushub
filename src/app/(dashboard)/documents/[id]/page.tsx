@@ -29,8 +29,9 @@ import {
 } from "@/lib/mock-data";
 import { initials, cn } from "@/lib/utils";
 
-export default function DocumentDetailPage({ params }: { params: { id: string } }) {
-  const doc = DOCUMENTS.find((d) => d.id === params.id);
+export default function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
+  const doc = DOCUMENTS.find((d) => d.id === id);
   if (!doc) notFound();
 
   const author = findPerson(doc.authorId);
